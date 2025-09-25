@@ -5,6 +5,7 @@ editor: visual
 ---
 
 *You can edit this however you like. I just put the instructions on the page so I wouldn't have to toggle*
+No worries I figure we can focus on the code and clean up the explanation toward the end. I am still going to try and explain as I go so you/I don't get lost but it may not be the most poetic writing. 
 
 # Creating the Functions used on this Project
 
@@ -16,7 +17,7 @@ Creating a function to call on specified variables from the Census API. Method: 
 
 -   Contains a year between 2010-2022
 
--   Return at lease 2 numeric variables: PUMS person weight (PWGTP) and at least 1 of the following
+-   Return at least 2 numeric variables: PUMS person weight (PWGTP) and at least 1 of the following
 
     -   Age (AGEP), Gas Cost (GASP), Gross rent as a percentage of household income (GRPIP), Time of arrival at work (JWAP), Time of departure from work (JWDP), Travel time to work (JWMNP)
 
@@ -26,15 +27,37 @@ Creating a function to call on specified variables from the Census API. Method: 
 
 -   Optional argument to subset the data based on geography (All, Regions, Divisions, or States)
 
+Setting up the needed packages for this project. Note please make sure you install these packages in your console before calling them with the library statement!
+
 ```{r}
-# Helper function to turn GET() to a tibble
+# Libraries we need 
+# For building function
+library("tidyverse")
+# To query API
+library("httr")
+library("jsonlite")
+```
+
+The first step in our homework is to try and query an API. I choose a random URL to test before we get into our function writing. 
+
+```{r}
+# "Start by getting the usual process to work with a given URL"
+# I am setting up trial url
+test_URL <- "https://api.census.gov/data/2012/acs/acs1/pumspr?get=SEX,PWGTP,MAR&SCHL=24"
+# May want to rename from id_info
+id_info <-GET(test_URL)
+parsed <- fromJSON(rawToChar(id_info$content))
+# The first row is column names
+Census_Info <- as_tibble(parsed[-1,])
+names(Census_Info) <- parsed[1,0] 
+Census_Info
 ```
 
 ```{r}
-query_api <- function(year, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo = c("ALL"=NA)){
+query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo = c("ALL"=NA)){
   # year = year of census to call
   # vars = vector of numerical and categorical indexes associated with their names
-    # This is a little annoying to type out, so we can change it later
+  # This is a little annoying to type out, so we can change it later
   # geo = vector of geographic sub division similar to vec. all = Regions, Divisions, and States
   
   
@@ -91,3 +114,8 @@ query_api <- function(year, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo = c("
   
 }
 ```
+
+```{r}
+
+```
+
