@@ -4,8 +4,7 @@ format: html
 editor: visual
 ---
 
-*You can edit this however you like. I just put the instructions on the page so I wouldn't have to toggle*
-No worries I figure we can focus on the code and clean up the explanation toward the end. I am still going to try and explain as I go so you/I don't get lost but it may not be the most poetic writing. 
+*You can edit this however you like. I just put the instructions on the page so I wouldn't have to toggle* No worries I figure we can focus on the code and clean up the explanation toward the end. I am still going to try and explain as I go so you/I don't get lost but it may not be the most poetic writing.
 
 # Creating the Functions used on this Project
 
@@ -38,20 +37,35 @@ library("httr")
 library("jsonlite")
 ```
 
-The first step in our homework is to try and query an API. I choose a random URL to test before we get into our function writing. 
+The first step in our homework is to try and query an API. I chose a random URL to test before we get into our function writing.
 
 ```{r}
 # "Start by getting the usual process to work with a given URL"
 # I am setting up trial url
 test_URL <- "https://api.census.gov/data/2012/acs/acs1/pumspr?get=SEX,PWGTP,MAR&SCHL=24"
-# May want to rename from id_info
-id_info <-GET(test_URL)
-parsed <- fromJSON(rawToChar(id_info$content))
-# The first row is column names
-Census_Info <- as_tibble(parsed[-1,])
-names(Census_Info) <- parsed[1,0] 
-Census_Info
+raw_info <-GET(test_URL)
+parsed <- fromJSON(rawToChar(raw_info$content))
+# The first row is column names so we have to adjust 
+test_info <- as_tibble(parsed[-1,])
+colnames(test_info) <- parsed[1,] 
+test_info
 ```
+
+If you click on the link it looks like our code worked great! Let's work on the second step, writing a helper function to iterate this process. 
+
+```{r}
+# "write a helper function to take what is returned by GET() and turn it into a nice tibble"
+# This assumes valid URL is used and has the same structure as our above example
+URL_funct <-function(Census_URL){ 
+  raw_info <-GET(Census_URL)
+  parsed <-fromJSON(rawToChar(raw_info$content))
+  Census_info <- as_tibble(parsed[-1,])
+  colnames(Census_info) <- parsed[1,] 
+  return(Census_info)
+}
+```
+
+
 
 ```{r}
 query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo = c("ALL"=NA)){
@@ -118,4 +132,3 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo 
 ```{r}
 
 ```
-
