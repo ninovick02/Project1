@@ -51,7 +51,7 @@ colnames(test_info) <- parsed[1,]
 test_info
 ```
 
-If you click on the link it looks like our code worked great! Let's work on the second step, writing a helper function to iterate this process. 
+If you click on the link it looks like our code worked great! Let's work on the second step, writing a helper function to iterate this process.
 
 ```{r}
 # "Write a helper function to take what is returned by GET() and turn it into a nice tibble"
@@ -65,8 +65,6 @@ URL_funct <-function(Census_URL){
   return(Census_info)
 }
 ```
-
-
 
 ```{r}
 query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "all", geo_code){
@@ -106,6 +104,12 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   if (length(n_var_names) == 0 | length(c_var_names) == 0){
     stop("Warning: One or more variables are invalid or not enough variables as argument")
   } 
+  
+  # Giving note if one of the varible calls is invalid and subsetting to valid variables
+  if ((length(n_var_names) + length(c_var_names)) < length(names(vars))){
+      print("Note: One or more variables are invalid, returning only valid variables")
+    vars <- vars[c(n_var_names, c_var_names)]
+  }
 
   # PWEGTP always included and at least one other numeric var
   if (length(n_var_names) < 2 | !("PWGTP" %in% n_var_names)){
@@ -157,5 +161,3 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   
 }
 ```
-
-
