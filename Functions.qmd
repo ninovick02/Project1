@@ -119,21 +119,23 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   if (valid_level=="region"){
     valid_code <- c(1:4)
   } else if (valid_level=="division"){
-    valid_code <- c(1:9)
+      valid_code <- c(1:9)
   } else if (valid_level=="state"){
-    valid_code <- c(1:50) #i saw somewhere that it needs to be 01 not 1 in url but when i tested it it worked fine??? did  not test all single digits, idk if we need to include dc???
+      valid_code <- c(1:56)[-c(3, 7, 14, 43, 52)] #i saw somewhere that it needs to be 01 not 1 in url but when i tested it it worked fine??? did  not test all single digits, idk if we need to include dc???
+    # Just checked all the numbers in ST variable. For both 2010 and 2020 census data, the codes are all the values between 1 and 56 except 3, 7, 14, 43, and 52.
+    # Also, just check all the valid 1 digit codes and it works without the 0 up front
   } 
     
   
   # Fill geo_str  
-  if (geo_level %in% valid_level && geo_code %in% valid_code){
+  if (geo_level %in% valid_level && (geo_code %in% valid_code)){
     geo_str<-paste0("&for=",geo_level,":",geo_code)
   } else if (!(geo_level %in% valid_geo & geo_level != "all")){
-    stop("Warning: Provided geography level is not valid")
+      stop("Warning: Provided geography level is not valid")
   } else if (!(geo_code %in% valid_code)){
-    stop("Warning: Provide geography code is not valid for your region")
+      stop("Warning: Provide geography code is not valid for your geography level")
   } else if (geo_level == "all"){
-    geo_str<-paste0("&for=",us,":*")
+      geo_str<-paste0("&for=",us,":*")
   }
   
   # Need to go through api site and find suitable values for variable indexes and filter out bad values
