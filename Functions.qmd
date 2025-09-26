@@ -55,7 +55,8 @@ If you click on the link it looks like our code worked great! Let's work on the 
 
 ```{r}
 # "Write a helper function to take what is returned by GET() and turn it into a nice tibble"
-# This assumes valid URL is used and has the same structure as our above example
+# This assumes valid URL is used and has the same structure as our above example if our other function is thurough enough
+# then this should not be an issue. 
 URL_funct <-function(Census_URL){ 
   raw_info <-GET(Census_URL)
   parsed <-fromJSON(rawToChar(raw_info$content))
@@ -68,10 +69,10 @@ URL_funct <-function(Census_URL){
 
 
 ```{r}
-query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = NULL, geo_code){
+query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "all", geo_code){
   # year = year of census to call, default is 2022
   # vars = vector of numerical and categorical indexes associated with their names default is PWGTP, AGEP, and SEX
-  # geo_level = geographic level Region, Division or State, default is all of the US which means &for is not in our URL hence the null.
+  # geo_level = geographic level Region, Division or State, default is all of the US 
   # geo_code = geographic code default is null as this is optional
   
   
@@ -117,16 +118,18 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
     valid_code <- c(1:9)
   } else if (valid_level=="state"){
     valid_code <- c(1:50) #i saw somewhere that it needs to be 01 not 1 in url but when i tested it it worked fine??? did  not test all single digits, idk if we need to include dc???
-  }
+  } 
     
   
   # Fill geo_str  
   if (geo_level %in% valid_level && geo_code %in% valid_code){
     geo_str<-paste0("&for=",geo_level,":",geo_code)
-  } else if (!(geo_level %in% valid_geo)){
+  } else if (!(geo_level %in% valid_geo & geo_level != "all")){
     stop("Warning: Provided geography level is not valid")
   } else if (!(geo_code %in% valid_code)){
     stop("Warning: Provide geography code is not valid for your region")
+  } else if (geo_level == "all"){
+    geo_str<-paste0("&for=",us,":*")
   }
   
   # Need to go through api site and find suitable values for variable indexes and filter out bad values
