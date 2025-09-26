@@ -54,7 +54,7 @@ test_info
 If you click on the link it looks like our code worked great! Let's work on the second step, writing a helper function to iterate this process. 
 
 ```{r}
-# "write a helper function to take what is returned by GET() and turn it into a nice tibble"
+# "Write a helper function to take what is returned by GET() and turn it into a nice tibble"
 # This assumes valid URL is used and has the same structure as our above example
 URL_funct <-function(Census_URL){ 
   raw_info <-GET(Census_URL)
@@ -68,49 +68,75 @@ URL_funct <-function(Census_URL){
 
 
 ```{r}
-query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo = c("ALL"=NA)){
-  # year = year of census to call
-  # vars = vector of numerical and categorical indexes associated with their names
-  # This is a little annoying to type out, so we can change it later
-  # geo = vector of geographic sub division similar to vec. all = Regions, Divisions, and States
+query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = NULL, geo_code){
+  # year = year of census to call, default is 2022
+  # vars = vector of numerical and categorical indexes associated with their names default is PWGTP, AGEP, and SEX
+  # geo_level = geographic level Region, Division or State, default is all of the US which means &for is not in our URL hence the null.
+  # geo_code = geographic code default is null as this is optional
   
   
   # Making variable choices align with instructions
-  names(vars) <- toupper(names(vars))
-  names(geo) <- toupper(names(geo))
   
+  #Empty for now
+  geo_str<-""
+  
+  # User input to upper/lower case
+  # i made geo lower case because thats how it is in url
+  names(vars) <- toupper(names(vars))
+  geo_level <- tolower(geo)
+  
+  # All variable options
   n_valid_vars <- c("PWGTP", "AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP")
   c_valid_vars <- c("FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL", "SEX")
+  valid_level <- c("region", "division", "state")
   
+  # Keep only those that appear in both
   n_var_names <- intersect(names(vars), n_valid_vars)
   c_var_names <- intersect(names(vars), c_valid_vars)
   
+  # This checks that year is numeric, not multiple years and between '10 and '22
   if (!is.numeric(year) | length(year) != 1){
     stop("Warning: Year must be a single numeric value")
   } else if(year > 2022 | year < 2010){
     stop("Warning: Year must be between 2010-2022")
   }
   
+  # Vars asked for in the set/at least 1 categorical
   if (length(n_var_names) == 0 | length(c_var_names) == 0){
     stop("Warning: One or more variables are invalid or not enough variables as argument")
   } 
 
+  # PWEGTP always included and at least one other numeric var
   if (length(n_var_names) < 2 | !("PWGTP" %in% n_var_names)){
     stop("Warning: PWGTP and at least 1 other valid numerical vector must be an argument")
   }
+
+  if (valid_level=="region"){
+    valid_code <- c(1:4)
+  } else if (valid_level=="division"){
+    valid_code <- c(1:9)
+  } else if (valid_level=="state"){
+    valid_code <- c(1:50) #i saw somewhere that it needs to be 01 not 1 in url but when i tested it it worked fine??? did  not test all single digits, idk if we need to include dc???
+  }
+    
   
-  if(!(names(geo) %in% c("ALL", "REGIONS", "DIVISIONS", "STATES"))){
-    stop("Warning: Invalid geography level")
+  # Fill geo_str  
+  if (geo_level %in% valid_level && geo_code %in% valid_code){
+    geo_str<-paste0("&for=",geo_level,":",geo_code)
+  } else if (!(geo_level %in% valid_geo)){
+    stop("Warning: Provided geography level is not valid")
+  } else if (!(geo_code %in% valid_code)){
+    stop("Warning: Provide geography code is not valid for your region")
   }
   
-  if ("ALL" %in% geo){
-    names(geo) <- c("REGIONS", "DIVISIONS", "STATES")
-  }
   # Need to go through api site and find suitable values for variable indexes and filter out bad values
     # I'm thinking that if they put in a bad value, we print a warning, but give them the variable without an index
   
   
-  # Can't figure out how to do all the geography variables in one go. Will need to call multiple tables from the api and merge left with the "main variable tibble"
+  # Can't figure out how to do all the geography variables in one go. Will need to call multiple tables from the api and merge left with the "main variable tibble" 
+  
+  # i reread the forum seems like all means all of us and if they do not specify a division i.e they do region 1 vs region note default is without &for in url
+#not sure if he wants 2 seperate variables or 1 im not sure how to seperate the string given covered material if he wants only 1 combined in put.
   main_var_url <- ifelse(!all(is.na(vars)), 
                     paste0("https://api.census.gov/data/", as.character(year), "/acs/acs1/pums?get=", 
                       paste(names(vars)[is.na(vars)], collapse=","), "&",
@@ -129,6 +155,4 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo 
 }
 ```
 
-```{r}
 
-```
