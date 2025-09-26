@@ -136,10 +136,22 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   #Cannot be indexed: PWGTP
   for (item in vars[-which(names(vars) == "PWGTP")]){
     if (!is.na(vars[item])){
-      if (var_limits$lower_bound[which(var_limits$names == names(vars[item]))] > vars[item] | var_limits$upper_bound[which(var_limits$names == names(vars[item]))] < vars[item]){
-        print("Invalid Variable Subsetting. Returning all values of the variable")
-        vars[item] = NA
+      
+      # Making sure given subset is an integer
+      if (vars[item] != round(vars[item])){
+        stop("Given subset must be an integer")
       }
+      
+      # Checking if given subset is within the bounds of the subset
+      if (var_limits$lower_bound[which(var_limits$names == names(vars[item]))] > vars[item] | var_limits$upper_bound[which(var_limits$names == names(vars[item]))] < vars[item]){
+        print(paste("Invalid Variable Subsetting. Returning all values of variable" + names(vars[item])))
+        vars[item] = NA
+      } else if ((names(vars[item]) %in% n_var_names)){
+        print("Note: Numerical variable subsetted. While within the given range, Specific number may not be in the data")
+      }
+      
+
+      
     }
   }
   
