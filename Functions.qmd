@@ -67,7 +67,7 @@ URL_funct <-function(Census_URL){
 ```
 
 ```{r}
-query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "all", geo_code){
+query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "state", geo_code = 11){
   # year = year of census to call, default is 2022
   # vars = vector of numerical and categorical indexes associated with their names default is PWGTP, AGEP, and SEX
   # geo_level = geographic level Region, Division or State, default is all of the US 
@@ -89,6 +89,11 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   c_valid_vars <- c("FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL", "SEX")
   valid_level <- c("region", "division", "state")
   
+  # Creating tibble of valid n and c var limits
+  var_limits <- data.frame(names = c(n_valid_vars[-which(names(vars) == "PWGTP")], c_valid_vars), 
+                          lower_bound = c(0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1), 
+                          upper_bound = c(99, 9999, 101, 285, 150, 200, 2, 5, 2, 12, 3, 24, 2))
+  
   # Keep only those that appear in both
   n_var_names <- intersect(names(vars), n_valid_vars)
   c_var_names <- intersect(names(vars), c_valid_vars)
@@ -105,7 +110,7 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
     stop("Warning: One or more variables are invalid or not enough variables as argument")
   } 
   
-  # Giving note if one of the varible calls is invalid and subsetting to valid variables
+  # Giving note if one of the variable calls is invalid and subsetting to valid variables
   if ((length(n_var_names) + length(c_var_names)) < length(names(vars))){
       print("Note: One or more variables are invalid, returning only valid variables")
     vars <- vars[c(n_var_names, c_var_names)]
@@ -115,7 +120,8 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   if (length(n_var_names) < 2 | !("PWGTP" %in% n_var_names)){
     stop("Warning: PWGTP and at least 1 other valid numerical vector must be an argument")
   }
-
+  
+  # Assigning valid geo code based on selected region
   if (valid_level=="region"){
     valid_code <- c(1:4)
   } else if (valid_level=="division"){
@@ -125,7 +131,17 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
     # Just checked all the numbers in ST variable. For both 2010 and 2020 census data, the codes are all the values between 1 and 56 except 3, 7, 14, 43, and 52.
     # Also, just check all the valid 1 digit codes and it works without the 0 up front
   } 
-    
+  
+  # Assigning valid indexes for variables
+  #Cannot be indexed: PWGTP
+  for (item in vars[-which(names(vars) == "PWGTP")]){
+    if (!is.na(vars[item])){
+      if (var_limits$lower_bound[which(var_limits$names == names(vars[item]))] > vars[item] | var_limits$upper_bound[which(var_limits$names == names(vars[item]))] < vars[item]){
+        print("Invalid Variable Subsetting. Returning all values of the variable")
+        vars[item] = NA
+      }
+    }
+  }
   
   # Fill geo_str  
   if (geo_level %in% valid_level && (geo_code %in% valid_code)){
