@@ -82,14 +82,14 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   # User input to upper/lower case
   # i made geo lower case because thats how it is in url
   names(vars) <- toupper(names(vars))
-  geo_level <- tolower(geo)
+  geo_level <- tolower(geo_level)
   
   # All variable options
   n_valid_vars <- c("PWGTP", "AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP")
   c_valid_vars <- c("FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL", "SEX")
-  valid_level <- c("region", "division", "state")
+  valid_level <- c("region", "division", "state", "all")
   
-  # Creating tibble of valid n and c var limits
+  # Creating tibble of valid n and c var limits based on variable information site
   var_limits <- data.frame(names = c(n_valid_vars[-which(names(vars) == "PWGTP")], c_valid_vars), 
                           lower_bound = c(0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1), 
                           upper_bound = c(99, 9999, 101, 285, 150, 200, 2, 5, 2, 12, 3, 24, 2))
@@ -97,6 +97,7 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   # Keep only those that appear in both
   n_var_names <- intersect(names(vars), n_valid_vars)
   c_var_names <- intersect(names(vars), c_valid_vars)
+  geo_name <- intersect(geo_level, valid_level)
   
   # This checks that year is numeric, not multiple years and between '10 and '22
   if (!is.numeric(year) | length(year) != 1){
@@ -122,72 +123,77 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   }
   
   # Assigning valid geo code based on selected region
-  if (valid_level=="region"){
+  if (geo_name == "region"){
     valid_code <- c(1:4)
-  } else if (valid_level=="division"){
+  } else if (geo_name == "division"){
       valid_code <- c(1:9)
-  } else if (valid_level=="state"){
+  } else if (geo_name == "state"){
       valid_code <- c(1:56)[-c(3, 7, 14, 43, 52)] #i saw somewhere that it needs to be 01 not 1 in url but when i tested it it worked fine??? did  not test all single digits, idk if we need to include dc???
     # Just checked all the numbers in ST variable. For both 2010 and 2020 census data, the codes are all the values between 1 and 56 except 3, 7, 14, 43, and 52.
     # Also, just check all the valid 1 digit codes and it works without the 0 up front
-  } 
+  } else{
+    geo_name <- c("REGION", "DIVISION", "ST")
+    geo_code = "*"
+  }
+  
+  if (!(geo_code == "*" || geo_code == round(geo_code))){
+    stop('Warning: geo_code must be an integer or "*"')
+  }
   
   # Assigning valid indexes for variables
   #Cannot be indexed: PWGTP
-  for (item in vars[-which(names(vars) == "PWGTP")]){
-    if (!is.na(vars[item])){
+  for (i in 1:length(vars[-which(names(vars) == "PWGTP")])){
+    if (!is.na(vars[i])){
       
       # Making sure given subset is an integer
-      if (vars[item] != round(vars[item])){
+      if (vars[i] != round(vars[item])){
         stop("Given subset must be an integer")
       }
       
       # Checking if given subset is within the bounds of the subset
-      if (var_limits$lower_bound[which(var_limits$names == names(vars[item]))] > vars[item] | var_limits$upper_bound[which(var_limits$names == names(vars[item]))] < vars[item]){
-        print(paste("Invalid Variable Subsetting. Returning all values of variable" + names(vars[item])))
-        vars[item] = NA
-      } else if ((names(vars[item]) %in% n_var_names)){
-        print("Note: Numerical variable subsetted. While within the given range, Specific number may not be in the data")
+      if (var_limits$lower_bound[which(var_limits$names == names(vars[i]))] > vars[i] | var_limits$upper_bound[which(var_limits$names == names(vars[i]))] < vars[i]){
+        print(paste("Invalid Variable Subsetting. Returning all values of variable", names(vars[i])))
+        vars[i] = NA
+      } else if ((names(vars[i]) %in% n_var_names)){
+          print("Note: Numerical variable subsetted. While within the given range, Specific number may not be in the data")
       }
-      
-
       
     }
   }
   
-  # Fill geo_str  
-  if (geo_level %in% valid_level && (geo_code %in% valid_code)){
-    geo_str<-paste0("&for=",geo_level,":",geo_code)
+  # Fill geo_str 
+ 
+  if(length(geo_name) > 1){
+    geo_str <- paste0(geo_name, collapse=,)
+  } else if (geo_level %in% valid_level && ((geo_code %in% valid_code) | geo_code == "*")){
+      geo_str<-paste0("&for=", geo_level, ":" ,geo_code)
   } else if (!(geo_level %in% valid_geo & geo_level != "all")){
       stop("Warning: Provided geography level is not valid")
   } else if (!(geo_code %in% valid_code)){
       stop("Warning: Provide geography code is not valid for your geography level")
-  } else if (geo_level == "all"){
-      geo_str<-paste0("&for=",us,":*")
   }
+
   
-  # Need to go through api site and find suitable values for variable indexes and filter out bad values
-    # I'm thinking that if they put in a bad value, we print a warning, but give them the variable without an index
-  
-  
-  # Can't figure out how to do all the geography variables in one go. Will need to call multiple tables from the api and merge left with the "main variable tibble" 
   
   # i reread the forum seems like all means all of us and if they do not specify a division i.e they do region 1 vs region note default is without &for in url
 #not sure if he wants 2 seperate variables or 1 im not sure how to seperate the string given covered material if he wants only 1 combined in put.
-  main_var_url <- ifelse(!all(is.na(vars)), 
-                    paste0("https://api.census.gov/data/", as.character(year), "/acs/acs1/pums?get=", 
+ if(!all(is.na(vars))){
+   if(length(geo_name) > 1){
+     api_url <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?get=", 
+                      paste(names(vars)[is.na(vars)], collapse=","), geo_str, "&",
+                      paste0(names(vars)[!is.na(vars)], "=", vars[!is.na(vars)], collapse="&"))
+   } else{
+     api_url <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?get=", 
                       paste(names(vars)[is.na(vars)], collapse=","), "&",
-                      paste0(names(vars)[!is.na(vars)], "=", vars[!is.na(vars)], collapse="&")), 
-                    paste0("https://api.census.gov/data/", as.character(year), "/acs/acs1/pums?get=", 
-                      paste(names(vars)[is.na(vars)], collapse=","))
-    )
-  # Now to make the geography level urls. in the form of &for=geolevel:index
-  
-  # Use first function to make into tibbles
-  main_var_tbl <- funct(main_var_url)
-  geo_tbl <- funct(geo_url)
-  
-  # Merge left main_var, geo
+                      paste0(names(vars)[!is.na(vars)], "=", vars[!is.na(vars)], collapse="&"), geo_str)
+   }
+ } else{
+    api_url <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?get=", 
+                      paste(names(vars)[is.na(vars)], collapse=","), geo_str)
+ }
+    
+  api_url  
+ # url_tbl(api_url)
   
 }
 ```
