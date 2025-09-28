@@ -51,7 +51,7 @@ colnames(test_info) <- parsed[1,]
 test_info
 ```
 
-If you click on the link it looks like our code worked great! Let's work on the second step, writing a helper function to iterate this process.
+If you click on the link it looks like our code worked great! Let's work on the second step, writing a helper function to iterate this process. Here we have to make sure categorical variables that coded with strings of numbers get converted to the correct information via the mutate and factor.
 
 ```{r}
 # "Write a helper function to take what is returned by GET() and turn it into a nice tibble"
@@ -62,46 +62,45 @@ URL_funct <-function(Census_URL){
   parsed <-fromJSON(rawToChar(raw_info$content))
   Census_info <- as_tibble(parsed[-1,])
   colnames(Census_info) <- parsed[1,] 
-  return(Census_info)
   
   
-  # Turn categorical variables into factors
+  # Turn categorical variables into factors with the appropriate levels using if logic to see if the column is in our tibble
   
   # FER
   if ("FER" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-    mutate(FER = factor(as.numeric(FER), levels = c(0:2), labels = c("N/A (less than 15 years/greater than 50 years/ male)", "No", "Yes")))
+     mutate(FER = factor(as.numeric(FER), levels = c(0:2), labels = c("N/A (less than 15 years/greater than 50 years/ male)", "No", "Yes")))
   }  
   
   # HHL
     if ("HHL" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-    mutate(HHL = factor(as.numeric(HHL), levels = c(0:5), labels = c("N/A (GQ/Vacant)", "Spanish","Other Indo-European languages", "English Only","Asian and Pacific Island languages", "Other Language")))
+     mutate(HHL = factor(as.numeric(HHL), levels = c(0:5), labels = c("N/A (GQ/Vacant)", "Spanish","Other Indo-European languages", "English Only","Asian and Pacific Island languages", "Other Language")))
     }  
   
    # HISPEED 
   if ("HISPEED" %in% colnames(Census_info)) {
      Census_info <- Census_info |>
-     mutate(HISPEED = factor(as.numeric(HISPEED), levels = c(0:2), labels = c("N/A (GQ/vacant/no paid access to internet)", "Yes", "No")))
+       mutate(HISPEED = factor(as.numeric(HISPEED), levels = c(0:2), labels = c("N/A (GQ/vacant/no paid access to internet)", "Yes", "No")))
   }
   
 
   # JWTRNS
   if ("JWTRNS" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-    mutate(JWTRNS = factor(as.numeric(JWTRNS), levels = (0:12),
+     mutate(JWTRNS = factor(as.numeric(JWTRNS), levels = (0:12),
                           labels = c("N/A (not a worker-not in the labor force, including persons under 16 years; unemployed; employed, with a job but not at work; Armed Forces, with a job but not at work)","Car, truck, or van","Bus","Subway or elevated rail","Long-distance train or commuter rail","Light rail, streetcar, or trolley","Ferryboat","Taxicab","Motorcycle","Bicycle","Walked","Worked from home","Other method")))
   }
   # SCH
   if ("SCH" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-    mutate(SCH = factor(as.numeric(SCH), levels = 0:2,labels = c("N/A (less than 3 years old)","No, has not attended in the last 3 months","Yes, public school or public college","Yes, private school or college or home school"))) 
+      mutate(SCH = factor(as.numeric(SCH), levels = 0:2,labels = c("N/A (less than 3 years old)","No, has not attended in the last 3 months","Yes, public school or public college","Yes, private school or college or home school"))) 
   }
   
   # SCHL (education)
   if ("SCHL" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-    mutate(SCHL = factor(as.numeric(SCHL),levels = (0:24),labels = c("N/A (less than 3 years old)", "No schooling completed","Nursery school, preschool","Kindergarten","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","12th grade - no diploma","Regular high school diploma","GED or alternative credential","Some college, but less than 1 year","1 or more years of college credit, no degree","Associate's degree","Bachelor's degree","Master's degree","Professional degree beyond a bachelor's degree","Doctorate degree")))
+      mutate(SCHL = factor(as.numeric(SCHL),levels = (0:24),labels = c("N/A (less than 3 years old)", "No schooling completed","Nursery school, preschool","Kindergarten","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","12th grade - no diploma","Regular high school diploma","GED or alternative credential","Some college, but less than 1 year","1 or more years of college credit, no degree","Associate's degree","Bachelor's degree","Master's degree","Professional degree beyond a bachelor's degree","Doctorate degree")))
   }
   
    # SEX
@@ -109,9 +108,25 @@ URL_funct <-function(Census_URL){
     Census_info <- Census_info |>
       mutate(SEX = factor(as.numeric(SEX), levels = c(1:2),labels = c("Male", "Female")))
   }
+  
+ # Next convert numeric variables with similar if logic to check if they are in tibble we can loop through this
+  
+num_vars <- c("AGEP", "GASP", "GRPIP", "JWMNP")
+
+for (i in num_vars) {
+  if (i %in% colnames(Census_info)) {
+    Census_info[[i]] <- as.numeric(Census_info[[i]])
+  }
+}
+
+  
+  return(Census_info)
  
 }
 ```
+
+
+
 
 ```{r}
 query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "all" , geo_code = NULL){
