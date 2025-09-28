@@ -70,46 +70,44 @@ URL_funct <-function(Census_URL){
   # FER
   if ("FER" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-    mutate(FER = factor(FER, levels = c(0:2), labels = c("N/A (less than 15 years/greater than 50 years/ male)", "No", "Yes")))
+    mutate(FER = factor(as.numeric(FER), levels = c(0:2), labels = c("N/A (less than 15 years/greater than 50 years/ male)", "No", "Yes")))
   }  
   
   # HHL
     if ("HHL" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-    mutate(HHL = factor(FER, levels = c(0:5), labels = c("N/A (GQ/Vacant)", "Spanish","Other Indo-European languages", "English Only","Asian and Pacific Island languages", "Other Language")))
+    mutate(HHL = factor(as.numeric(HHL), levels = c(0:5), labels = c("N/A (GQ/Vacant)", "Spanish","Other Indo-European languages", "English Only","Asian and Pacific Island languages", "Other Language")))
     }  
   
    # HISPEED 
   if ("HISPEED" %in% colnames(Census_info)) {
      Census_info <- Census_info |>
-     mutate(HISPEED = factor(HISPEED, levels = c(0:2), labels = c("N/A (GQ/vacant/no paid access to internet)", "Yes", "No")))
+     mutate(HISPEED = factor(as.numeric(HISPEED), levels = c(0:2), labels = c("N/A (GQ/vacant/no paid access to internet)", "Yes", "No")))
   }
   
 
   # JWTRNS
-  if ("MAR" %in% colnames(Census_info)) {
+  if ("JWTRNS" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-    mutate(MAR = factor(MAR, levels = (0:12),
+    mutate(JWTRNS = factor(as.numeric(JWTRNS), levels = (0:12),
                           labels = c("N/A (not a worker-not in the labor force, including persons under 16 years; unemployed; employed, with a job but not at work; Armed Forces, with a job but not at work)","Car, truck, or van","Bus","Subway or elevated rail","Long-distance train or commuter rail","Light rail, streetcar, or trolley","Ferryboat","Taxicab","Motorcycle","Bicycle","Walked","Worked from home","Other method")))
   }
   # SCH
-  if ("SCHL" %in% colnames(Census_info)) {
+  if ("SCH" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-      mutate(SCHL = factor(SCHL,
-                           levels = 0:2,
-                           labels = c("N/A (less than 3 years old)","No, has not attended in the last 3 months","Yes, public school or public college","Yes, private school or college or home school"))) 
+    mutate(SCH = factor(as.numeric(SCH), levels = 0:2,labels = c("N/A (less than 3 years old)","No, has not attended in the last 3 months","Yes, public school or public college","Yes, private school or college or home school"))) 
   }
   
   # SCHL (education)
   if ("SCHL" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-      mutate(SCHL = factor(SCHL,levels = (0:24),labels = c("N/A (less than 3 years old)", "No schooling completed","Nursery school, preschool","Kindergarten","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","12th grade - no diploma","Regular high school diploma","GED or alternative credential","Some college, but less than 1 year","1 or more years of college credit, no degree","Associate's degree","Bachelor's degree","Master's degree","Professional degree beyond a bachelor's degree","Doctorate degree")))
+    mutate(SCHL = factor(as.numeric(SCHL),levels = (0:24),labels = c("N/A (less than 3 years old)", "No schooling completed","Nursery school, preschool","Kindergarten","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","12th grade - no diploma","Regular high school diploma","GED or alternative credential","Some college, but less than 1 year","1 or more years of college credit, no degree","Associate's degree","Bachelor's degree","Master's degree","Professional degree beyond a bachelor's degree","Doctorate degree")))
   }
   
    # SEX
   if ("SEX" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
-      mutate(SEX = factor(SEX, levels = c(1:2),labels = c("Male", "Female")))
+      mutate(SEX = factor(as.numeric(SEX), levels = c(1:2),labels = c("Male", "Female")))
   }
  
 }
