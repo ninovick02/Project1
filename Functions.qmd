@@ -129,7 +129,7 @@ for (i in num_vars) {
 
 
 ```{r}
-query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "all" , geo_code = NULL){
+query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "state" , geo_code = 11){
   # year = year of census to call, default is 2022
   # vars = vector of numerical and categorical indexes associated with their names default is PWGTP, AGEP, and SEX
   # geo_level = geographic level Region, Division or State, default is all of the US 
