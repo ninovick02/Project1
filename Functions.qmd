@@ -590,9 +590,7 @@ URL_funct <-function(Census_URL){
    if ("JWAP" %in% colnames(Census_info)) {
     times_JWAP <- unique(Census_info$JWAP)   
     Census_info <- Census_info |>
-    mutate(JWAP = factor(JWAP,
-                         levels = times_JWAP,
-                         labels = sapply(times_JWAP, mid_time)))
+    mutate(JWAP = factor(JWAP, levels = times_JWAP, labels = sapply(times_JWAP, mid_time)))
     }
 
   
