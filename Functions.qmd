@@ -55,7 +55,7 @@ If you click on the link it looks like our code worked great! Let's work on the 
 
 ```{r}
 # "Write a helper function to take what is returned by GET() and turn it into a nice tibble"
-# This assumes valid URL is used and has the same structure as our above example if our other function is thurough enough
+# This assumes valid URL is used and has the same structure as our above example if our other function is thorough enough
 # then this should not be an issue. 
 URL_funct <-function(Census_URL){ 
   raw_info <-GET(Census_URL)
@@ -63,11 +63,60 @@ URL_funct <-function(Census_URL){
   Census_info <- as_tibble(parsed[-1,])
   colnames(Census_info) <- parsed[1,] 
   return(Census_info)
+  
+  
+  # Turn categorical variables into factors
+  
+  # FER
+  if ("FER" %in% colnames(Census_info)) {
+    Census_info <- Census_info |>
+    mutate(FER = factor(FER, levels = c(0:2), labels = c("N/A (less than 15 years/greater than 50 years/ male)", "No", "Yes")))
+  }  
+  
+  # HHL
+    if ("HHL" %in% colnames(Census_info)) {
+    Census_info <- Census_info |>
+    mutate(HHL = factor(FER, levels = c(0:5), labels = c("N/A (GQ/Vacant)", "Spanish","Other Indo-European languages", "English Only","Asian and Pacific Island languages", "Other Language")))
+    }  
+  
+   # HISPEED 
+  if ("HISPEED" %in% colnames(Census_info)) {
+     Census_info <- Census_info |>
+     mutate(HISPEED = factor(HISPEED, levels = c(0:2), labels = c("N/A (GQ/vacant/no paid access to internet)", "Yes", "No")))
+  }
+  
+
+  # JWTRNS
+  if ("MAR" %in% colnames(Census_info)) {
+    Census_info <- Census_info |>
+    mutate(MAR = factor(MAR, levels = (0:12),
+                          labels = c("N/A (not a worker-not in the labor force, including persons under 16 years; unemployed; employed, with a job but not at work; Armed Forces, with a job but not at work)","Car, truck, or van","Bus","Subway or elevated rail","Long-distance train or commuter rail","Light rail, streetcar, or trolley","Ferryboat","Taxicab","Motorcycle","Bicycle","Walked","Worked from home","Other method")))
+  }
+  # SCH
+  if ("SCHL" %in% colnames(Census_info)) {
+    Census_info <- Census_info |>
+      mutate(SCHL = factor(SCHL,
+                           levels = 0:2,
+                           labels = c("N/A (less than 3 years old)","No, has not attended in the last 3 months","Yes, public school or public college","Yes, private school or college or home school"))) 
+  }
+  
+  # SCHL (education)
+  if ("SCHL" %in% colnames(Census_info)) {
+    Census_info <- Census_info |>
+      mutate(SCHL = factor(SCHL,levels = (0:24),labels = c("N/A (less than 3 years old)", "No schooling completed","Nursery school, preschool","Kindergarten","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","12th grade - no diploma","Regular high school diploma","GED or alternative credential","Some college, but less than 1 year","1 or more years of college credit, no degree","Associate's degree","Bachelor's degree","Master's degree","Professional degree beyond a bachelor's degree","Doctorate degree")))
+  }
+  
+   # SEX
+  if ("SEX" %in% colnames(Census_info)) {
+    Census_info <- Census_info |>
+      mutate(SEX = factor(SEX, levels = c(1:2),labels = c("Male", "Female")))
+  }
+ 
 }
 ```
 
 ```{r}
-query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "state", geo_code = 11){
+query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "all" , geo_code = NULL){
   # year = year of census to call, default is 2022
   # vars = vector of numerical and categorical indexes associated with their names default is PWGTP, AGEP, and SEX
   # geo_level = geographic level Region, Division or State, default is all of the US 
@@ -128,16 +177,14 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   } else if (geo_name == "division"){
       valid_code <- c(1:9)
   } else if (geo_name == "state"){
-      valid_code <- c(1:56)[-c(3, 7, 14, 43, 52)] #i saw somewhere that it needs to be 01 not 1 in url but when i tested it it worked fine??? did  not test all single digits, idk if we need to include dc???
-    # Just checked all the numbers in ST variable. For both 2010 and 2020 census data, the codes are all the values between 1 and 56 except 3, 7, 14, 43, and 52.
-    # Also, just check all the valid 1 digit codes and it works without the 0 up front
+      valid_code <- c(1:56)[-c(3, 7, 14, 43, 52)] 
   } else{
-    geo_name <- c("REGION", "DIVISION", "ST")
+    geo_name <- c("REGION", "DIVISION", "ST") # can they specify all three or does he want us to use 'all' as the catch all?
     geo_code = "*"
   }
   
   if (!(geo_code == "*" || geo_code == round(geo_code))){
-    stop('Warning: geo_code must be an integer or "*"')
+    stop('Warning: geo_code must be an integer or "*"') # isnt this covered in other if/else
   }
   
   # Assigning valid indexes for variables
@@ -163,20 +210,18 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   
   # Fill geo_str 
  
-  if(length(geo_name) > 1){
+  if(length(geo_name) > 1){ # i am confused about the first if 
     geo_str <- paste0(geo_name, collapse=,)
   } else if (geo_level %in% valid_level && ((geo_code %in% valid_code) | geo_code == "*")){
       geo_str<-paste0("&for=", geo_level, ":" ,geo_code)
   } else if (!(geo_level %in% valid_geo & geo_level != "all")){
       stop("Warning: Provided geography level is not valid")
   } else if (!(geo_code %in% valid_code)){
-      stop("Warning: Provide geography code is not valid for your geography level")
+      stop("Warning: Provided geography code is not valid for your geography level")
   }
 
   
-  
-  # i reread the forum seems like all means all of us and if they do not specify a division i.e they do region 1 vs region note default is without &for in url
-#not sure if he wants 2 seperate variables or 1 im not sure how to seperate the string given covered material if he wants only 1 combined in put.
+
  if(!all(is.na(vars))){
    if(length(geo_name) > 1){
      api_url <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?get=", 
@@ -192,8 +237,8 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
                       paste(names(vars)[is.na(vars)], collapse=","), geo_str)
  }
     
-  api_url  
- # url_tbl(api_url)
+  return(URL_funct(api_url))
+
   
 }
 ```
