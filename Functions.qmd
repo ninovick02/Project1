@@ -607,11 +607,7 @@ URL_funct <-function(Census_URL){
 
 
 ```{r}
-<<<<<<< HEAD
-query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "State" , geo_code = 11){
-=======
 query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "state" , geo_code = 11){
->>>>>>> 409ea30d8b76157692231c1f16e747feeb8572b6
   # year = year of census to call, default is 2022
   # vars = vector of numerical and categorical indexes associated with their names default is PWGTP, AGEP, and SEX
   # geo_level = geographic level Region, Division or State, default is state  
