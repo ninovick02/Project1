@@ -561,39 +561,69 @@ URL_funct <-function(Census_URL){
   # we are doing time as numeric variable for minutes
   # each time interval is 4 mins so mid point is start time plus 2 mins
   mid_time <- function(time) {
-    if (is.na(time)) return(NA)
+    print(time)
+    print(length(time))
+    
+     if (length(time) == 0 || is.na(time) || time == "NA" || time == "0") {
+    return(NA)
+  }
   
      # split interval into start and end time
      parts <- strsplit(time, " to ")[[1]]
-     start <- parts[1]  
+     start <- parts[1]
+     end <- parts[2]
   
-     # split into "x:xx" and "x.m"
+     # split into "x:xx" and "x.m."
      start_parts <- strsplit(start, " ")[[1]]
-     start_time <- start_parts[1]     
+     end_parts <- strsplit(end, " ")[[1]]
+     start_time <- start_parts[1]
+     end_time <- end_parts[1]
+  
   
      # split "x:xx" into hours and minutes
+     # Note: The intervals are never split between different hours
      start_time_parts <- strsplit(start_time, ":")[[1]]
+     end_time_parts <- strsplit(end_time, ":")[[1]]
+     
      hours <- as.numeric(start_time_parts[1])
      
      # convert to minutes + add 2 for midpoint
-     minutes <- as.numeric(start_time_parts[2])
-     minutes <- minutes + 2
+     # not all intervales are 4 minutes apart (eg 007 in JWAP and 148 in JWDP are 9 minutes apart)
+     minutes_start <- as.numeric(start_time_parts[2])
+     minutes_end <- as.numeric(end_time_parts[2])
+     minutes <- (minutes_end + minutes_start)/2
      
      # put back together
-     mid_pt <- paste0(hours,":", sprintf("%02d", minutes), " ", start_parts[2])
+     if (minutes == round(minutes)){
+       mid_pt <- paste0(hours,":", sprintf("%02.f", minutes), " ", start_parts[2])
+     }
+     else{ # if there are half-minutes (30 seconds)
+       mid_pt <- paste0(hours,":", sprintf("%02.f", minutes), ":30",  " ", start_parts[2])
+     }
   #IDK IF WE ARE ALLOWED TO DO SPRINTF but idk how else to make sure 0 is included when adding unless we only add to the second digit. Note he said we can keep it character 
      
      return(mid_pt)
   }
-
-   # JWAP
-   if ("JWAP" %in% colnames(Census_info)) {
-    times_JWAP <- unique(Census_info$JWAP)   
-    Census_info <- Census_info |>
-    mutate(JWAP = factor(JWAP, levels = times_JWAP, labels = sapply(times_JWAP, mid_time)))
-    }
-
   
+ # I moved the sapply outside of tif statements bc it was interpreting the vector as factor in stead of character
+  JWAP_label <- sapply(times_JWAP, mid_time)
+  JWDP_label <- sapply(times_JWDP, mid_time)
+  
+  # JWAP
+  if ("JWAP" %in% colnames(Census_info)) {
+    times_JWAP <- unique(Census_info$JWAP) 
+    JWAP_label <- JWAP_lable[unique(Census_info$JWAP)]
+    Census_info <- Census_info |>
+      mutate(JWAP = factor(JWAP, levels = times_JWAP, labels = JWAP_label))
+  }
+  
+  # JWDP
+  if ("JWDP" %in% colnames(Census_info)) {
+    times_JWDP <- unique(Census_info$JWDP)
+    JWDP_label <- JWDP_label[unique(Census_info$JWDP)]
+    Census_info <- Census_info |>
+      mutate(JWDP = factor(JWDP, levels = times_JWDP, labels = JWDP_label))
+  }
   
   
   return(Census_info)
@@ -644,6 +674,15 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
     stop("Warning: Year must be between 2010-2022")
   }
   
+  # filtering out variables from forum that if they are not in certain year
+  if ("JWTRNS" %in% c_var_names & year < 2019){
+    stop("Warning: JWTRNS was not recorded in the year provided")
+  } 
+  
+  if ("HISPEED" %in% c_var_names & year < 2016){
+    stop("Warning: HISPEED was not recorded in the year provided")
+  }
+  
   # Vars asked for in the set/at least 1 categorical
   if (length(n_var_names) == 0 | length(c_var_names) == 0){
     stop("Warning: One or more variables are invalid or not enough variables as argument")
@@ -682,7 +721,7 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
     if (!is.na(vars[i])){
       
       # Making sure given subset is an integer
-      if (vars[i] != round(vars[item])){
+      if (vars[i] != round(vars[i])){
         stop("Given subset must be an integer")
       }
       
@@ -735,7 +774,7 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
 
 Just a lil test section :)
 ```{r}
-query_api()
+query_api(vars = c(PWGTP = NA, JWDP = NA, SEX = 1))
 
 ```
 
