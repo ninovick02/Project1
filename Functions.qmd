@@ -34,6 +34,8 @@ library("tidyverse")
 # To query API
 library("httr")
 library("jsonlite")
+# time mid pt function
+library("hms")
 ```
 
 The first step in our homework is to try and query an API. I chose a random URL to test before we get into our function writing.
@@ -47,6 +49,44 @@ parsed <- fromJSON(rawToChar(raw_info$content))
 test_info <- as_tibble(parsed[-1,])
 colnames(test_info) <- parsed[1,] 
 test_info
+```
+```{r}
+# function to do mid point of time
+
+mid_time <- function(time) {
+  if (time == "NA" || time == "0") {
+    return(NA)
+  }
+  
+  # Split interval into start and end times
+  parts <- str_split(time, " to ", simplify = TRUE)
+  start <- parts[1]
+  end   <- parts[2]
+  
+  # ran into issue because hms uses AM PM with no dots, this cleans it
+  start <- str_replace_all(start, c("a.m." = "AM", "p.m." = "PM"))
+  end   <- str_replace_all(end,   c("a.m." = "AM", "p.m." = "PM"))
+  
+  # using hms (time format) because of forum Dr. Post mentioned it
+  start_hms <- as_hms(strptime(start, format = "%I:%M %p"))
+  end_hms   <- as_hms(strptime(end,   format = "%I:%M %p"))
+
+  # Compute midpoint via average seconds between start and end
+  # note we were told we can round to get it to the minute only
+  mid_secs <- (as.numeric(start_hms) + as.numeric(end_hms)) / 2
+  mid_secs <- round(mid_secs / 60)*60
+  
+  # back to time format
+  mid_hms  <- as_hms(mid_secs)
+  
+  # back to character, display only hours mins and am/pm
+  out <- format(strptime(as.character(mid_hms), "%H:%M:%S"), "%I:%M %p")
+  
+  return(out)
+}
+
+mid_time("9:15 a.m. to 9:19 a.m.")
+
 ```
 
 If you click on the link it looks like our code worked great! Let's work on the second step, writing a helper function to iterate this process. Here we have to make sure categorical variables that coded with strings of numbers get converted to the correct information via the mutate and factor.
@@ -558,69 +598,21 @@ URL_funct <-function(Census_URL){
        "0"= "NA"
   )
   
-  # we are doing time as numeric variable for minutes
-  # each time interval is 4 mins so mid point is start time plus 2 mins
-  mid_time <- function(time) {
-    
-   if (length(time) == 0 || is.na(time) || time == "NA" || time == "0") {
-    return(NA)
-  }
   
-     # split interval into start and end time
-     parts <- strsplit(time, " to ")[[1]]
-     start <- parts[1]
-     end <- parts[2]
-  
-     # split into "x:xx" and "x.m."
-     start_parts <- strsplit(start, " ")[[1]]
-     end_parts <- strsplit(end, " ")[[1]]
-     start_time <- start_parts[1]
-     end_time <- end_parts[1]
-  
-  
-     # split "x:xx" into hours and minutes
-     # Note: The intervals are never split between different hours
-     start_time_parts <- strsplit(start_time, ":")[[1]]
-     end_time_parts <- strsplit(end_time, ":")[[1]]
-     
-     hours <- as.numeric(start_time_parts[1])
-     
-     # convert to minutes + add 2 for midpoint
-     # not all intervales are 4 minutes apart (eg 007 in JWAP and 148 in JWDP are 9 minutes apart)
-     minutes_start <- as.numeric(start_time_parts[2])
-     minutes_end <- as.numeric(end_time_parts[2])
-     minutes <- (minutes_end + minutes_start)/2
-     
-     # put back together
-     if (minutes == round(minutes)){
-       mid_pt <- paste0(hours,":", sprintf("%02.f", minutes), " ", start_parts[2])
-     }
-     else{ # if there are half-minutes (30 seconds)
-       mid_pt <- paste0(hours,":", sprintf("%02.f", minutes), ":30",  " ", start_parts[2])
-     }
-  #IDK IF WE ARE ALLOWED TO DO SPRINTF but idk how else to make sure 0 is included when adding unless we only add to the second digit. Note he said we can keep it character 
-     
-     return(mid_pt)
-  }
-  
- # I moved the sapply outside of tif statements bc it was interpreting the vector as factor in stead of character
+  # note sapply is discussed in week 8 (future material)
   JWAP_label <- sapply(times_JWAP, mid_time)
   JWDP_label <- sapply(times_JWDP, mid_time)
   
   # JWAP
   if ("JWAP" %in% colnames(Census_info)) {
-    times_JWAP <- unique(Census_info$JWAP) 
-    JWAP_label <- JWAP_lable[unique(Census_info$JWAP)]
     Census_info <- Census_info |>
-      mutate(JWAP = factor(JWAP, levels = times_JWAP, labels = JWAP_label))
+      mutate(JWAP = JWaP_label[JWaP])
   }
   
   # JWDP
   if ("JWDP" %in% colnames(Census_info)) {
-    times_JWDP <- unique(Census_info$JWDP)
-    JWDP_label <- JWDP_label[unique(Census_info$JWDP)]
     Census_info <- Census_info |>
-      mutate(JWDP = factor(JWDP, levels = times_JWDP, labels = JWDP_label))
+      mutate(JWDP = JWDP_label[JWDP]) 
   }
   
   
@@ -772,8 +764,8 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
 
 Just a lil test section :)
 ```{r}
-query_api(vars = c(PWGTP = NA, JWDP = NA, SEX = 1))
-
+Census_tibble <- query_api(vars = c(PWGTP = NA, JWDP=100, SEX = 2))
+# does our function address 001 vs 1 vs 01?
 ```
 
 
@@ -816,4 +808,12 @@ yrs = c(2012, 2013, 2021)
 build_multi_year_tbl(years = yrs)
 ```
 
+Generic function for summarizing.
+
+```{r}
+class(Census_tibble) < c("census",class(Census_tibble))
+summary.Census <- function(tibble,num_vars,cat_vars){
+  
+}
+```
 
