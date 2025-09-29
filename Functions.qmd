@@ -29,7 +29,7 @@ Setting up the needed packages for this project. Note please make sure you insta
 
 ```{r}
 # Libraries we need 
-# For building functions
+# For various parts of building our functions
 library("tidyverse")
 # To query API
 library("httr")
@@ -811,9 +811,75 @@ build_multi_year_tbl(years = yrs)
 Generic function for summarizing.
 
 ```{r}
-class(Census_tibble) < c("census",class(Census_tibble))
-summary.Census <- function(tibble,num_vars,cat_vars){
+# as per instructions 
+class(Census_tibble) <- c("census",class(Census_tibble))
+
+# summarizing function
+summary_Census <- function(tibble, num_vars=NULL, cat_vars=NULL){
+  # tibble we are using
+  # num_vars are our numeric variables we want to summarize
+  # cat_vars are our categorical variables we want to summarize
+  # we did NULL default so we can use if logic later to return all
   
+  # empty list for later
+  results <- list()
+  
+  #numeric 
+  
+  # return all numeric names except PWGTP
+  all_num <- tibble |>
+    select(where(is.numeric), -PWGTP) |>
+    names()
+
+  # Keep only those that appear in both
+  num_vars <- intersect(num_vars, all_num)
+  
+  # give us all numeric variables if none given
+  if (is.null(num_vars)){
+    num_vars <- all_num
+  }
+  
+  # loop to go through this vector and compute mean and standard deviation
+  # note given outline code for this
+  for (i in num_vars){
+    x <- tibble[[i]]
+    x_mean <- sum(x*weight)/sum(weight)
+    x_sd <- sqrt(sum(x*x*weight)/sum(weight)-(x_mean*x_mean))
+    results[[i]] <-list(mean=x_mean, sd=x_sd)
+  }
+  
+  # categorical
+  
+  # return all categorical names
+  all_cat <- tibble |>
+  select(where(is.character), where(is.factor)) |>
+  names()
+  
+  # Keep only those that appear in both
+  cat_vars <- intersect(cat_vars, all_cat)
+  
+  # give us all categorical variables if none given
+  if (is.null(cat_vars)) {
+    cat_vars <- all_cat
+  } 
+  
+  # loop to go through this vector and compute counts
+  for (i in cat_vars){
+    counts <- xtabs(weight ~ data[[v]])
+    results[[v]] <- as.list(counts)
+  }
+  
+  return(results)
 }
+
+#test for this function
+summary_census(Census_Tibble)
+```
+
+We are now going to **test** our summary function!
+
+```{r}
+#test for this function
+summary_census(Census_Tibble)
 ```
 
