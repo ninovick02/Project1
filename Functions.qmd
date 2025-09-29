@@ -561,10 +561,8 @@ URL_funct <-function(Census_URL){
   # we are doing time as numeric variable for minutes
   # each time interval is 4 mins so mid point is start time plus 2 mins
   mid_time <- function(time) {
-    print(time)
-    print(length(time))
     
-     if (length(time) == 0 || is.na(time) || time == "NA" || time == "0") {
+   if (length(time) == 0 || is.na(time) || time == "NA" || time == "0") {
     return(NA)
   }
   
@@ -777,4 +775,45 @@ Just a lil test section :)
 query_api(vars = c(PWGTP = NA, JWDP = NA, SEX = 1))
 
 ```
+
+
+ Last Data processing function
+ Specifies multiple years of survey data
+ 
+```{r}
+build_multi_year_tbl <- function(years = c(2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022), vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "state" , geo_code = 11){
+  
+  if (any(years > 2022) | any(years < 2010) | any(years == 2020)){
+    stop("Warning: Year must be between 2010-2022 and not 2020")
+  }
+  
+  if ("JWTRNS" %in% names(vars) & any(years < 2019)){
+    stop("Warning: JWTRNS only recorded in years greater than 2019")
+  } 
+  
+  if ("HISPEED" %in% names(vars) & any(years < 2016)){
+    stop("Warning: HISPEED was not recorded in the year provided")
+  }
+  
+  multi_year_tbl = tibble()
+  for (i in 1:length(years)){
+    multi_year_tbl <- bind_rows(multi_year_tbl, query_api(years[i], vars, geo_level, geo_code))
+    multi_year_tbl <- multi_year_tbl |>
+      mutate(
+        year = years[i],
+        .before = 1
+      )
+  }
+  
+  return(multi_year_tbl)
+  
+}
+```
+ 
+
+```{r}
+yrs = c(2012, 2013, 2021)
+build_multi_year_tbl(years = yrs)
+```
+
 
