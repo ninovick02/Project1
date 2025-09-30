@@ -38,7 +38,7 @@ library("jsonlite")
 library("hms")
 ```
 
-The first step in our homework is to try and query an API. I chose a random URL to test before we get into our function writing.
+The first step in our homework is to try and query an API. I chose a random URL to **test** before we get into our function writing.
 
 ```{r}
 # I am setting up trial url
@@ -50,6 +50,9 @@ test_info <- as_tibble(parsed[-1,])
 colnames(test_info) <- parsed[1,] 
 test_info
 ```
+
+If you click on the link it looks like our code worked great! We will now define a function to help us determine mid point for time intervals of the form "9:15 a.m. to 9:19 a.m." which happens in the variables JWAP and JWDP. Our function should return 9:17 AM.
+
 ```{r}
 # function to do mid point of time
 
@@ -80,16 +83,21 @@ mid_time <- function(time) {
   mid_hms  <- as_hms(mid_secs)
   
   # back to character, display only hours mins and am/pm
+  # Dr. Post said this its okay to be character
   out <- format(strptime(as.character(mid_hms), "%H:%M:%S"), "%I:%M %p")
   
   return(out)
 }
 
-mid_time("9:15 a.m. to 9:19 a.m.")
-
 ```
 
-If you click on the link it looks like our code worked great! Let's work on the second step, writing a helper function to iterate this process. Here we have to make sure categorical variables that coded with strings of numbers get converted to the correct information via the mutate and factor.
+Were going to **test** that our function for mid point in time works with the example we mentioned above!
+
+```{r}
+mid_time("9:15 a.m. to 9:19 a.m.")
+```
+
+Great, now lets work on the second step, writing a helper function to iterate this process. Here we have to make sure categorical variables that coded with strings of numbers get converted to the correct information via the mutate and factor. We must make sure numeric variables are numeric, and finally we have to make sure our time variables return the middle of the time period. 
 
 ```{r}
 # This assumes valid URL is used and has the same structure as our above example if our other function is thorough enough then this should not be an issue. 
@@ -139,21 +147,23 @@ URL_funct <-function(Census_URL){
       mutate(SCHL = factor(as.numeric(SCHL),levels = (0:24),labels = c("N/A (less than 3 years old)", "No schooling completed","Nursery school, preschool","Kindergarten","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","12th grade - no diploma","Regular high school diploma","GED or alternative credential","Some college, but less than 1 year","1 or more years of college credit, no degree","Associate's degree","Bachelor's degree","Master's degree","Professional degree beyond a bachelor's degree","Doctorate degree")))
   }
   
-   # SEX
+  # SEX
   if ("SEX" %in% colnames(Census_info)) {
     Census_info <- Census_info |>
       mutate(SEX = factor(as.numeric(SEX), levels = c(1:2),labels = c("Male", "Female")))
   }
   
- # Next convert numeric variables with similar if logic to check if they are in tibble we can loop through this
+  # Next convert numeric variables with similar if logic to check if they are in tibble we can loop through this
   
-  num_vars <- c("AGEP", "GASP", "GRPIP", "JWMNP")
+  num_vars <- c("AGEP", "GASP", "GRPIP", "JWMNP", "PWGTP")
 
   for (i in num_vars) {
     if (i %in% colnames(Census_info)) {
     Census_info[[i]] <- as.numeric(Census_info[[i]])
     }
   }
+  
+  
   # taken from their site, i just swapped : for =
   times_JWAP <-c(
       "258"= "9:40 p.m. to 9:44 p.m.",
@@ -621,9 +631,14 @@ URL_funct <-function(Census_URL){
 }
 ```
 
+Now that its built lets **test** calling it with the URL we used above.
+
+```{r}
+URL_funct(test_URL)
+```
 
 
-
+Awesome, now lets build our function to...
 ```{r}
 query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "state" , geo_code = 11){
   # year = year of census to call, default is 2022
@@ -767,6 +782,7 @@ We want to **test** that our function to query and API worked!
 ```{r}
 Census_tibble <- query_api(vars = c(PWGTP = NA, GASP=3, SEX = NA))
 # does our function address 001 vs 1 vs 01 for jwdp?
+
 Census_tibble
 ```
 
@@ -868,8 +884,9 @@ summary_Census <- function(tibble, num_vars=NULL, cat_vars=NULL){
   } 
   
   # loop to go through this vector and compute counts
+  # tapply is base R read through the documentation on it in the help tab
   for (i in cat_vars){
-    counts <- xtabs(weight ~ tibble[[i]])
+    counts <- tapply(weight, tibble[[i]],sum)  
     results[[i]] <- as.list(counts)
   }
   
@@ -911,10 +928,14 @@ plot_Census <- function(tibble , num_var , cat_var){
   } else if (!(cat_var %in% all_cat) || !(num_var %in% all_num)){
     stop("Warning: Invalid categorical or numeric variable specified")
   }
+  
   # this code was given
   ggplot(tibble,
-    aes(x = get(cat_var), y = get(num_var), weight = as.numeric(PWGTP))) + geom_boxplot()
+    aes(x = get(cat_var), y = get(num_var), weight = as.numeric(PWGTP)) + geom_boxplot())
+    
 }
+
+
 ```
 
 Now we will **test** our function for plots works! Again we will use test tibble from testing our API query.
