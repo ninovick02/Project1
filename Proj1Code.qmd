@@ -663,11 +663,11 @@ Creating a function to call on specified variables from the Census API. Method: 
 
 -   Return at least 2 numeric variables: PUMS person weight (PWGTP) and at least 1 of the following
 
-    -   Age (AGEP), Gas Cost (GASP), Gross rent as a percentage of household income (GRPIP), Time of arrival at work (JWAP), Time of departure from work (JWDP), Travel time to work (JWMNP)
+    -   Age (AGEP), Gas Cost (GASP), Gross rent as a percentage of annual household income (GRPIP), Time of arrival at work (JWAP), Time of departure from work (JWDP), Travel time to work (JWMNP)
 
 -   Return at least 1 categorical variable
 
-    -   (FER), (HHL), (HISPEED), (JWTRNS), (SCH), (SCHL), (SEX)
+    -   Gave birth to a child with the past 12 months (FER), Household Language (HHL), Broadband Internet service (HISPEED), Means of transportation to work (JWTRNS), School enrollment (SCH), Educational attainment (SCHL), Sex (SEX)
 
 -   Optional argument to subset the data based on geography (All, Regions, Divisions, or States)
 
@@ -676,7 +676,7 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
   # year = year of census to call, default is 2022
   # vars = a vector of numerical and categorical indexes associated with their names default is PWGTP, AGEP, and SEX. The value NA means the variable is not going to be subsetted later.
   # geo_level = geographic level Region, Division or State. The default is state  
-  # geo_code = geographic index code. The default is our group number, ours is 11
+  # geo_code = geographic index code. The default is our group number, ours is 11 (Washington DC)
   
   # Logical Qualifiers
   
