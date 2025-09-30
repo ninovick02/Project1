@@ -14,7 +14,7 @@ editor: visual
 
 # Introduction
 
-In this document, we will write functions that will manipulate, process, and plot data from a [census API](https://data.census.gov/app/mdat/#). The following document is divided into parts: Data Processing, Obtaining Person Level Records, and Writing a Generic Function for Summarizing. For each major function, there will be a sample function call.
+In this document, we will write functions that will manipulate, process, and plot data from a [census API](https://data.census.gov/app/mdat/#). The following document is divided into parts: Data, Manipulation, and Investigation. We will be Data Processing, Obtaining Person Level Records, Writing a Generic Function for Summarizing, and Writing a Function for Plotting. For each major function, there will be a sample function call. We will then investigate something interesting about the data.
 
 ## Loading libraries
 
@@ -978,7 +978,6 @@ plot_Census <- function(tibble , num_var , cat_var){
   
   # this code was given
   ggplot(tibble,
-    # aes_string(x = cat_var, y = num_var, weight = "PWGTP")) + geom_boxplot()
     aes(x = get(cat_var), y = get(num_var), weight = as.numeric(PWGTP))) + geom_boxplot() + 
     xlab(cat_var) + ylab(num_var) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
@@ -992,8 +991,48 @@ Now we will **test** our function for plots works! Again we will use test tibble
 plot_Census(Census_tibble, "GASP", "SEX")
 ```
 
-This example was not very informative because the value of GASP is 3 for the specified qualifiers. For the following code chunk we will use our functions to build a plot based on Household Language and Age
+This example was not very informative because the value of GASP is 3 for the specified qualifiers. For the following code chunk we will use our functions to build a plot based on Household Language and Gross rent as a percentage of household income
 
 ```{r}
-plot_Census(query_api(vars = c(PWGTP = NA, AGEP = NA, HHL = NA)), "AGEP", "HHL")
+plot_Census(query_api(year = 2022, vars = c(PWGTP = NA, GRPIP = NA, HHL = NA)), "GRPIP", "HHL")
 ```
+
+
+# Investigation
+
+The plot of household language (HHL) against gross rent as a percentage of yearly household income (GRPIP) yielded an interesting result. It appears that in Washington DC (state 11) in the year 2022, approximately half of the households who speak English only or a non-Spanish Indo-European language do not have a value associated with rent. Specifically, "N/A (GQ/vacant/owned or being bought/occupied without rent payment/no household income)"
+
+Let us see what this plot looks like without the NA values. So what happens if we only look at the people paying rent. 
+```{r}
+full_tbl2022 <- query_api(year = 2022, vars = c(PWGTP = NA, GRPIP = NA, HHL = NA))
+invest_tbl2022 <- (query_api(year = 2022, vars = c(PWGTP = NA, GRPIP = NA, HHL = NA))) |>
+  filter(GRPIP > 0)
+
+
+plot_Census(invest_tbl2022, "GRPIP", "HHL")
+                
+```
+
+Now the variable medians are "flipped". Of the people who pay rent, households who speak English only or a non-Spanish Indo-European language tend to pay more.
+
+Does this hold true for the year 2021?
+```{r}
+full_tbl2021 <- query_api(year = 2021, vars = c(PWGTP = NA, GRPIP = NA, HHL = NA))
+invest_tbl2021 <- full_tbl2021 |>
+  filter(GRPIP > 0)
+
+plot_Census(full_tbl2021, "GRPIP", "HHL")
+plot_Census(invest_tbl2021, "GRPIP", "HHL")
+```
+This data is completely different that for the following year. Is it because of COVID-19? Let us investigate once more with the year 2018.
+```{r}
+full_tbl2018 <- query_api(year = 2018, vars = c(PWGTP = NA, GRPIP = NA, HHL = NA))
+invest_tbl2018 <- full_tbl2018 |>
+  filter(GRPIP > 0)
+
+plot_Census(full_tbl2018, "GRPIP", "HHL")
+plot_Census(invest_tbl2018, "GRPIP", "HHL")
+```
+These graphs look much more like those from 2022, so it seems like COVID-19 may have played a role in the number of people not paying rent in Washington DC. However, the inner-quartile ranges of the rent percentage is much smaller.
+
+Based on these findings, future research can focus on the following. What percentage of the people who pay zero rent own their house versus just do not pay rent (e.g. someone living with their parents)? What is it about English only households that causes them to have at least half of the population not paying rent? Is there a confounding factor between household language and the percentage of annual income set aside for rent? Is the inner-quartile range for GRPIP growing because of decreased/stagnated annual income, increased rent amount, or both?

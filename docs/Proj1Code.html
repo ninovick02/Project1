@@ -137,7 +137,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>In this document, we will write functions that will manipulate, process, and plot data from a <a href="https://data.census.gov/app/mdat/#">census API</a>. The following document is divided into parts: Data Processing, Obtaining Person Level Records, and Writing a Generic Function for Summarizing. For each major function, there will be a sample function call.</p>
+<p>In this document, we will write functions that will manipulate, process, and plot data from a <a href="https://data.census.gov/app/mdat/#">census API</a>. The following document is divided into parts: Data and Manipulation. We will be Data Processing, Obtaining Person Level Records, Writing a Generic Function for Summarizing, and Writing a Function for Plotting. For each major function, there will be a sample function call.</p>
 <section id="loading-libraries" class="level2">
 <h2 class="anchored" data-anchor-id="loading-libraries">Loading libraries</h2>
 <p>Setting up the needed packages for this project. Note please make sure you install these packages in your console before calling them with the library statement!</p>
@@ -1023,16 +1023,16 @@ The following object is masked from 'package:lubridate':
 <pre><code># A tibble: 3,144 × 4
    PWGTP SEX     GASP state
    &lt;dbl&gt; &lt;fct&gt;  &lt;dbl&gt; &lt;chr&gt;
- 1    68 Female     3 11   
- 2    85 Male       3 11   
- 3    25 Female     3 11   
- 4    66 Female     3 11   
- 5   108 Female     3 11   
- 6   277 Male       3 11   
- 7   142 Female     3 11   
- 8   140 Female     3 11   
- 9   142 Female     3 11   
-10   288 Female     3 11   
+ 1    72 Female     3 11   
+ 2    90 Male       3 11   
+ 3   183 Female     3 11   
+ 4   114 Female     3 11   
+ 5   184 Male       3 11   
+ 6   155 Male       3 11   
+ 7   149 Female     3 11   
+ 8    66 Female     3 11   
+ 9    54 Male       3 11   
+10    55 Male       3 11   
 # ℹ 3,134 more rows</code></pre>
 </div>
 </div>
