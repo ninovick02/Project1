@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Project 1 Site - Project 1</title>
+<title>Project 1</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -137,7 +137,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>In this document, we will write functions that will manipulate, process, and plot data from a <a href="https://data.census.gov/app/mdat/#">census API</a>. The following document is divided into parts: Data and Manipulation. We will be Data Processing, Obtaining Person Level Records, Writing a Generic Function for Summarizing, and Writing a Function for Plotting. For each major function, there will be a sample function call.</p>
+<p>In this document, we will write functions that will manipulate, process, and plot data from a <a href="https://data.census.gov/app/mdat/#">census API</a>. The following document is divided into parts: Data, Manipulation, and Investigation. We will be Data Processing, Obtaining Person Level Records, Writing a Generic Function for Summarizing, and Writing a Function for Plotting. For each major function, there will be a sample function call. We will then investigate something interesting about the data.</p>
 <section id="loading-libraries" class="level2">
 <h2 class="anchored" data-anchor-id="loading-libraries">Loading libraries</h2>
 <p>Setting up the needed packages for this project. Note please make sure you install these packages in your console before calling them with the library statement!</p>
@@ -859,11 +859,11 @@ The following object is masked from 'package:lubridate':
 <li><p>Contains a year between 2010-2022</p></li>
 <li><p>Return at least 2 numeric variables: PUMS person weight (PWGTP) and at least 1 of the following</p>
 <ul>
-<li>Age (AGEP), Gas Cost (GASP), Gross rent as a percentage of household income (GRPIP), Time of arrival at work (JWAP), Time of departure from work (JWDP), Travel time to work (JWMNP)</li>
+<li>Age (AGEP), Gas Cost (GASP), Gross rent as a percentage of annual household income (GRPIP), Time of arrival at work (JWAP), Time of departure from work (JWDP), Travel time to work (JWMNP)</li>
 </ul></li>
 <li><p>Return at least 1 categorical variable</p>
 <ul>
-<li>(FER), (HHL), (HISPEED), (JWTRNS), (SCH), (SCHL), (SEX)</li>
+<li>Gave birth to a child with the past 12 months (FER), Household Language (HHL), Broadband Internet service (HISPEED), Means of transportation to work (JWTRNS), School enrollment (SCH), Educational attainment (SCHL), Sex (SEX)</li>
 </ul></li>
 <li><p>Optional argument to subset the data based on geography (All, Regions, Divisions, or States)</p></li>
 </ul>
@@ -872,7 +872,7 @@ The following object is masked from 'package:lubridate':
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># year = year of census to call, default is 2022</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># vars = a vector of numerical and categorical indexes associated with their names default is PWGTP, AGEP, and SEX. The value NA means the variable is not going to be subsetted later.</span></span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># geo_level = geographic level Region, Division or State. The default is state  </span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># geo_code = geographic index code. The default is our group number, ours is 11</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># geo_code = geographic index code. The default is our group number, ours is 11 (Washington DC)</span></span>
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Logical Qualifiers</span></span>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  </span>
@@ -1023,16 +1023,16 @@ The following object is masked from 'package:lubridate':
 <pre><code># A tibble: 3,144 × 4
    PWGTP SEX     GASP state
    &lt;dbl&gt; &lt;fct&gt;  &lt;dbl&gt; &lt;chr&gt;
- 1    72 Female     3 11   
- 2    90 Male       3 11   
- 3   183 Female     3 11   
- 4   114 Female     3 11   
- 5   184 Male       3 11   
- 6   155 Male       3 11   
- 7   149 Female     3 11   
- 8    66 Female     3 11   
- 9    54 Male       3 11   
-10    55 Male       3 11   
+ 1    81 Female     3 11   
+ 2    67 Female     3 11   
+ 3    85 Male       3 11   
+ 4    51 Male       3 11   
+ 5    56 Female     3 11   
+ 6    80 Male       3 11   
+ 7   213 Female     3 11   
+ 8   175 Male       3 11   
+ 9    84 Male       3 11   
+10    62 Female     3 11   
 # ℹ 3,134 more rows</code></pre>
 </div>
 </div>
@@ -1216,11 +1216,10 @@ $SEX$Female
 <span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># this code was given</span></span>
 <span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(tibble,</span>
-<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>    <span class="co"># aes_string(x = cat_var, y = num_var, weight = "PWGTP")) + geom_boxplot()</span></span>
-<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">get</span>(cat_var), <span class="at">y =</span> <span class="fu">get</span>(num_var), <span class="at">weight =</span> <span class="fu">as.numeric</span>(PWGTP))) <span class="sc">+</span> <span class="fu">geom_boxplot</span>() <span class="sc">+</span> </span>
-<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(cat_var) <span class="sc">+</span> <span class="fu">ylab</span>(num_var) <span class="sc">+</span></span>
-<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">vjust =</span> <span class="dv">1</span>))</span>
-<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">get</span>(cat_var), <span class="at">y =</span> <span class="fu">get</span>(num_var), <span class="at">weight =</span> <span class="fu">as.numeric</span>(PWGTP))) <span class="sc">+</span> <span class="fu">geom_boxplot</span>() <span class="sc">+</span> </span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(cat_var) <span class="sc">+</span> <span class="fu">ylab</span>(num_var) <span class="sc">+</span></span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">vjust =</span> <span class="dv">1</span>))</span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now we will <strong>test</strong> our function for plots works! Again we will use test tibble from testing our API query.</p>
 <div class="cell">
@@ -1229,16 +1228,65 @@ $SEX$Female
 <p><img src="Proj1Code_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>This example was not very informative because the value of GASP is 3 for the specified qualifiers. For the following code chunk we will use our functions to build a plot based on Household Language and Age</p>
+<p>This example was not very informative because the value of GASP is 3 for the specified qualifiers. For the following code chunk we will use our functions to build a plot based on Household Language and Gross rent as a percentage of household income</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_Census</span>(<span class="fu">query_api</span>(<span class="at">vars =</span> <span class="fu">c</span>(<span class="at">PWGTP =</span> <span class="cn">NA</span>, <span class="at">AGEP =</span> <span class="cn">NA</span>, <span class="at">HHL =</span> <span class="cn">NA</span>)), <span class="st">"AGEP"</span>, <span class="st">"HHL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_Census</span>(<span class="fu">query_api</span>(<span class="at">year =</span> <span class="dv">2022</span>, <span class="at">vars =</span> <span class="fu">c</span>(<span class="at">PWGTP =</span> <span class="cn">NA</span>, <span class="at">GRPIP =</span> <span class="cn">NA</span>, <span class="at">HHL =</span> <span class="cn">NA</span>)), <span class="st">"GRPIP"</span>, <span class="st">"HHL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="Proj1Code_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-
-
 </section>
+</section>
+<section id="investigation" class="level1">
+<h1>Investigation</h1>
+<p>The plot of household language (HHL) against gross rent as a percentage of yearly household income (GRPIP) yielded an interesting result. It appears that in Washington DC (state 11) in the year 2022, approximately half of the households who speak English only or a non-Spanish Indo-European language do not have a value associated with rent. Specifically, “N/A (GQ/vacant/owned or being bought/occupied without rent payment/no household income)”</p>
+<p>Let us see what this plot looks like without the NA values. So what happens if we only look at the people paying rent.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>full_tbl2022 <span class="ot">&lt;-</span> <span class="fu">query_api</span>(<span class="at">year =</span> <span class="dv">2022</span>, <span class="at">vars =</span> <span class="fu">c</span>(<span class="at">PWGTP =</span> <span class="cn">NA</span>, <span class="at">GRPIP =</span> <span class="cn">NA</span>, <span class="at">HHL =</span> <span class="cn">NA</span>))</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>invest_tbl2022 <span class="ot">&lt;-</span> (<span class="fu">query_api</span>(<span class="at">year =</span> <span class="dv">2022</span>, <span class="at">vars =</span> <span class="fu">c</span>(<span class="at">PWGTP =</span> <span class="cn">NA</span>, <span class="at">GRPIP =</span> <span class="cn">NA</span>, <span class="at">HHL =</span> <span class="cn">NA</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(GRPIP <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_Census</span>(invest_tbl2022, <span class="st">"GRPIP"</span>, <span class="st">"HHL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Proj1Code_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Now the variable medians are “flipped”. Of the people who pay rent, households who speak English only or a non-Spanish Indo-European language tend to pay more.</p>
+<p>Does this hold true for the year 2021?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>full_tbl2021 <span class="ot">&lt;-</span> <span class="fu">query_api</span>(<span class="at">year =</span> <span class="dv">2021</span>, <span class="at">vars =</span> <span class="fu">c</span>(<span class="at">PWGTP =</span> <span class="cn">NA</span>, <span class="at">GRPIP =</span> <span class="cn">NA</span>, <span class="at">HHL =</span> <span class="cn">NA</span>))</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>invest_tbl2021 <span class="ot">&lt;-</span> full_tbl2021 <span class="sc">|&gt;</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(GRPIP <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_Census</span>(full_tbl2021, <span class="st">"GRPIP"</span>, <span class="st">"HHL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Proj1Code_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_Census</span>(invest_tbl2021, <span class="st">"GRPIP"</span>, <span class="st">"HHL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Proj1Code_files/figure-html/unnamed-chunk-17-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>This data is completely different that for the following year. Is it because of COVID-19? Let us investigate once more with the year 2018.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>full_tbl2018 <span class="ot">&lt;-</span> <span class="fu">query_api</span>(<span class="at">year =</span> <span class="dv">2018</span>, <span class="at">vars =</span> <span class="fu">c</span>(<span class="at">PWGTP =</span> <span class="cn">NA</span>, <span class="at">GRPIP =</span> <span class="cn">NA</span>, <span class="at">HHL =</span> <span class="cn">NA</span>))</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>invest_tbl2018 <span class="ot">&lt;-</span> full_tbl2018 <span class="sc">|&gt;</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(GRPIP <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_Census</span>(full_tbl2018, <span class="st">"GRPIP"</span>, <span class="st">"HHL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Proj1Code_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_Census</span>(invest_tbl2018, <span class="st">"GRPIP"</span>, <span class="st">"HHL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Proj1Code_files/figure-html/unnamed-chunk-18-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>These graphs look much more like those from 2022, so it seems like COVID-19 may have played a role in the number of people not paying rent in Washington DC. However, the inner-quartile ranges of the rent percentage is much smaller.</p>
+<p>Based on these findings, future research can focus on the following. What percentage of the people who pay zero rent own their house versus just do not pay rent (e.g.&nbsp;someone living with their parents)? What is it about English only households that causes them to have at least half of the population not paying rent? Is there a confounding factor between household language and the percentage of annual income set aside for rent? Is the inner-quartile range for GRPIP growing because of decreased/stagnated annual income, increased rent amount, or both?</p>
+
+
 </section>
 
 </main> <!-- /main -->
