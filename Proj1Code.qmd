@@ -1,20 +1,20 @@
 ---
-title: "Index"
+title: "Project 1"
 format: html
 editor: visual
 ---
 
-## Authors: Naomi Novick & Elle Whitlock
+### Authors: Naomi Novick & Elle Whitlock
 
-## Date: 2025-10-01
+### Date: 2025-10-01
 
-## Purpose: ST558 Project 1
+### Purpose: ST558 Project 1
 
-### Investigating code sourced from the US census API
+#### Investigating code sourced from the US census API
 
 # Introduction
 
-In this document, we will write functions that will manipulate, process, and plot data from a [census API](%22https://data.census.gov/app/mdat/#%22). The following document is divided into parts: Data Processing, Obtaining Person Level Records, and Writing a Generic Function for Summarizing. For each major function, there will be a sample function call.
+In this document, we will write functions that will manipulate, process, and plot data from a [census API](https://data.census.gov/app/mdat/#). The following document is divided into parts: Data Processing, Obtaining Person Level Records, and Writing a Generic Function for Summarizing. For each major function, there will be a sample function call.
 
 ## Loading libraries
 
@@ -875,6 +875,7 @@ We went back to the generalized function (URL_funct) to build a table from an AP
 > class(Census_tibble) \<- c("census",class(Census_tibble))
 
 The summarizing function will produce the means and standard deviations for specified numeric variables and the counts for specified categorical variables. The arguments would be the tibble produced from URL_funct, and the numeric and categorical variables to summarize. The numeric variables are weighted based on the peron weight vector, PWGTP.
+
 ```{r}
 # summarizing function
 summarize_census <- function(tibble, num_vars=NULL, cat_vars=NULL){
@@ -949,7 +950,8 @@ summarize_census(Census_tibble, "GASP", "SEX")
 
 ## Plotting Function
 
-Next we will create our plot function. We are requiring to user to specify one categorical and one numeric variable for plotting purposes. 
+Next we will create our plot function. We are requiring to user to specify one categorical and one numeric variable for plotting purposes.
+
 ```{r}
 plot_Census <- function(tibble , num_var , cat_var){
   
@@ -989,8 +991,9 @@ Now we will **test** our function for plots works! Again we will use test tibble
 ```{r}
 plot_Census(Census_tibble, "GASP", "SEX")
 ```
+
 This example was not very informative because the value of GASP is 3 for the specified qualifiers. For the following code chunk we will use our functions to build a plot based on Household Language and Age
+
 ```{r}
 plot_Census(query_api(vars = c(PWGTP = NA, AGEP = NA, HHL = NA)), "AGEP", "HHL")
 ```
-
