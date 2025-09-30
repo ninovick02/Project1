@@ -765,7 +765,7 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
 We want to **test** that our function to query and API worked!
 
 ```{r}
-Census_tibble <- query_api(vars = c(PWGTP = NA, GASP=3, SEX = 1))
+Census_tibble <- query_api(vars = c(PWGTP = NA, GASP=3, SEX = NA))
 # does our function address 001 vs 1 vs 01 for jwdp?
 Census_tibble
 ```
@@ -913,7 +913,7 @@ plot_Census <- function(tibble , num_var , cat_var){
   }
   # this code was given
   ggplot(tibble,
-    aes(x = get(cat_var), y = get(num_var), weight = PWGTP)) + geom_boxplot()
+    aes(x = get(cat_var), y = get(num_var), weight = as.numeric(PWGTP))) + geom_boxplot()
 }
 ```
 
