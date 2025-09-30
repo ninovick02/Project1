@@ -14,7 +14,7 @@ editor: visual
 
 # Introduction
 
-In this document, we will write functions that will manipulate, process, and plot data from a [census API]("https://data.census.gov/app/mdat/#"). The following document is divided into parts: Data Processing, Obtaining Person Level Records, and Writing a Generic Function for Summarizing. For each major function, there will be a sample function call. 
+In this document, we will write functions that will manipulate, process, and plot data from a [census API](%22https://data.census.gov/app/mdat/#%22). The following document is divided into parts: Data Processing, Obtaining Person Level Records, and Writing a Generic Function for Summarizing. For each major function, there will be a sample function call.
 
 ## Loading libraries
 
@@ -48,12 +48,11 @@ colnames(test_info) <- parsed[1,]
 test_info
 ```
 
-
 ## Creating Generalized Function to turn API URL to a Table
 
 If you click on the link it looks like our code worked great!
 
-### Helper Funtion to Determine Time Variable Mid Points
+### Helper Function to Determine Time Variable Mid Points
 
 We will now define a function to help us determine mid point for time intervals of the form "9:15 a.m. to 9:19 a.m." which happens in the variables JWAP and JWDP. Our function should return 9:17 AM.
 
@@ -101,7 +100,7 @@ Were going to **test** that our function for mid point in time works with the ex
 mid_time("9:15 a.m. to 9:19 a.m.")
 ```
 
-Great, now lets work on the second step, writing a helper function to iterate this process. 
+Great, now lets work on the second step, writing a helper function to iterate this process.
 
 ### Generalized Helper function
 
@@ -636,6 +635,8 @@ URL_funct <-function(Census_URL){
       mutate(JWDP = JWDP_label[JWDP]) 
   }
   
+  # From Data Manipulation step in instructions
+  class(Census_info) <- c("census",class(Census_info))
   
   return(Census_info)
  
@@ -652,9 +653,9 @@ Awesome, now lets build our function to...
 
 ## Query the Census API and Return a Table
 
-The following function builds a URL for a single year of the API from user input and uses the previous function to make it a tibble. The code is divided into 2 main parts: logical qualifiers to align with project instructions and API limitations, and building a string to pass along to the generic URL function. 
+The following function builds a URL for a single year of the API from user input and uses the previous function to make it a tibble. The code is divided into 2 main parts: logical qualifiers to align with project instructions and API limitations, and building a string to pass along to the generic URL function.
 
-### Quoted URL String  
+### Quoted URL String
 
 Creating a function to call on specified variables from the Census API. Method: passing along variables to a paste statement based on the following specifications
 
@@ -669,8 +670,6 @@ Creating a function to call on specified variables from the Census API. Method: 
     -   (FER), (HHL), (HISPEED), (JWTRNS), (SCH), (SCHL), (SEX)
 
 -   Optional argument to subset the data based on geography (All, Regions, Divisions, or States)
-
-
 
 ```{r}
 query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_level = "state" , geo_code = 11){
@@ -825,7 +824,7 @@ Census_tibble <- query_api(vars = c(PWGTP = NA, GASP=3, SEX = NA))
 Census_tibble
 ```
 
-## Creating Table that Spans Multiple Years 
+## Creating Table that Spans Multiple Years
 
 Last Data processing function. Specifies multiple years of survey data while keeping the rest of the variables constatnt
 
@@ -846,12 +845,12 @@ build_multi_year_tbl <- function(years = c(2012, 2013, 2014, 2015, 2016, 2017, 2
   
   multi_year_tbl = tibble()
   for (i in 1:length(years)){
-    multi_year_tbl <- bind_rows(multi_year_tbl, query_api(years[i], vars, geo_level, geo_code))
-    multi_year_tbl <- multi_year_tbl |>
-      mutate(
-        year = years[i],
-        .before = 1
-      )
+    temp <- query_api(years[i], vars, geo_level, geo_code) |>
+        mutate(
+          year = years[i],
+          .before = 1
+        )
+    multi_year_tbl <- bind_rows(multi_year_tbl, temp)
   }
   
   return(multi_year_tbl)
@@ -860,21 +859,25 @@ build_multi_year_tbl <- function(years = c(2012, 2013, 2014, 2015, 2016, 2017, 2
 ```
 
 We want to **test** that our function to make a table with multiple years worked
+
 ```{r}
 yrs = c(2012, 2013, 2021)
-build_multi_year_tbl(years = yrs)
+multi_yr_tbl <- build_multi_year_tbl(years = yrs)
+multi_yr_tbl
 ```
 
 # Manipulation
 
 ## Generic function for summarizing.
 
-```{r}
-# as per instructions 
-class(Census_tibble) <- c("census",class(Census_tibble))
+We went back to the generalized function (URL_funct) to build a table from an API URL to input the code to add a class to the census data for summarizing purposes. The code instructions on our tester table would look like
 
+> class(Census_tibble) \<- c("census",class(Census_tibble))
+
+The summarizing function will produce the means and standard deviations for specified numeric variables and the counts for specified categorical variables. The arguments would be the tibble produced from URL_funct, and the numeric and categorical variables to summarize. The numeric variables are weighted based on the peron weight vector, PWGTP.
+```{r}
 # summarizing function
-summary_Census <- function(tibble, num_vars=NULL, cat_vars=NULL){
+summarize_census <- function(tibble, num_vars=NULL, cat_vars=NULL){
   # tibble we are using
   # num_vars are our numeric variables we want to summarize
   # cat_vars are our categorical variables we want to summarize
@@ -901,12 +904,12 @@ summary_Census <- function(tibble, num_vars=NULL, cat_vars=NULL){
   }
   
   # loop to go through this vector and compute mean and standard deviation
-  # note given outline code for this
+  # note: Given outline code for this. Replace x^2 with x*x
   for (i in num_vars){
     x <- tibble[[i]]
     x_mean <- sum(x*weight)/sum(weight)
     x_sd <- sqrt(sum(x*x*weight)/sum(weight)-(x_mean*x_mean))
-    results[[i]] <-list(mean=x_mean, sd=x_sd)
+    results[[i]] <- list(mean = x_mean, sd = x_sd)
   }
   
   # categorical
@@ -920,7 +923,7 @@ summary_Census <- function(tibble, num_vars=NULL, cat_vars=NULL){
   cat_vars <- intersect(cat_vars, all_cat)
   
   # give us all categorical variables if none given
-  if (is.null(cat_vars)) {
+  if (is.null(cat_vars)){
     cat_vars <- all_cat
   } 
   
@@ -941,11 +944,12 @@ We are now going to **test** our summary function! We used the test tibble from 
 
 ```{r}
 #test for this function
-summary_Census(Census_tibble, "GASP", "SEX")
+summarize_census(Census_tibble, "GASP", "SEX")
 ```
 
-Next we will create our plot function.
+## Plotting Function
 
+Next we will create our plot function. We are requiring to user to specify one categorical and one numeric variable for plotting purposes. 
 ```{r}
 plot_Census <- function(tibble , num_var , cat_var){
   
@@ -972,10 +976,13 @@ plot_Census <- function(tibble , num_var , cat_var){
   
   # this code was given
   ggplot(tibble,
-    aes(x = get(cat_var), y = get(num_var), weight = as.numeric(PWGTP)) + geom_boxplot())
+    # aes_string(x = cat_var, y = num_var, weight = "PWGTP")) + geom_boxplot()
+    aes(x = get(cat_var), y = get(num_var), weight = as.numeric(PWGTP))) + geom_boxplot() + 
+    xlab(cat_var) + ylab(num_var) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+    #theme(axis.text.x = element_text(angle = 70,  vjust = 1))
     
 }
-
 
 ```
 
@@ -984,3 +991,8 @@ Now we will **test** our function for plots works! Again we will use test tibble
 ```{r}
 plot_Census(Census_tibble, "GASP", "SEX")
 ```
+This example was not very informative because the value of GASP is 3 for the specified qualifiers. For the following code chunk we will use our functions to build a plot based on Household Language and Age
+```{r}
+plot_Census(query_api(vars = c(PWGTP = NA, AGEP = NA, HHL = NA)), "AGEP", "HHL")
+```
+
