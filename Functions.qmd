@@ -762,10 +762,12 @@ query_api <- function(year=2022, vars = c("PWGTP"=NA, "AGEP"=NA, "SEX"=NA), geo_
 ```
 
 
-Just a lil test section :)
+We want to **test** that our function to query and API worked!
+
 ```{r}
-Census_tibble <- query_api(vars = c(PWGTP = NA, JWDP=100, SEX = 2))
-# does our function address 001 vs 1 vs 01?
+Census_tibble <- query_api(vars = c(PWGTP = NA, GASP=3, SEX = 1))
+# does our function address 001 vs 1 vs 01 for jwdp?
+Census_tibble
 ```
 
 
@@ -824,13 +826,15 @@ summary_Census <- function(tibble, num_vars=NULL, cat_vars=NULL){
   # empty list for later
   results <- list()
   
+  weight <- as.numeric(tibble$PWGTP)
+  
   #numeric 
   
   # return all numeric names except PWGTP
   all_num <- tibble |>
     select(where(is.numeric), -PWGTP) |>
     names()
-
+  
   # Keep only those that appear in both
   num_vars <- intersect(num_vars, all_num)
   
@@ -865,21 +869,58 @@ summary_Census <- function(tibble, num_vars=NULL, cat_vars=NULL){
   
   # loop to go through this vector and compute counts
   for (i in cat_vars){
-    counts <- xtabs(weight ~ data[[v]])
-    results[[v]] <- as.list(counts)
+    counts <- xtabs(weight ~ tibble[[i]])
+    results[[i]] <- as.list(counts)
   }
   
   return(results)
 }
 
-#test for this function
-summary_census(Census_Tibble)
+
 ```
 
-We are now going to **test** our summary function!
+We are now going to **test** our summary function! We used the test tibble from when we tested our API query!
 
 ```{r}
 #test for this function
-summary_census(Census_Tibble)
+summary_Census(Census_tibble, "GASP", "SEX")
 ```
+
+Next we will create our plot function.
+
+```{r}
+plot_Census <- function(tibble , num_var , cat_var){
+  
+  # valid num
+  all_num <- tibble |>
+  select(where(is.numeric), -PWGTP) |>
+  names()
+  
+  # valid cat
+  all_cat <- tibble |>
+  select(where(is.character), where(is.factor)) |>
+  names()
+  
+  # to uppercase
+  names(num_var) <- toupper(names(num_var))
+  names(cat_var) <- toupper(names(cat_var))
+  
+  # only one cat or num variable
+  if (length(cat_var) != 1 | length(num_var) != 1) {
+    stop("Warning: Please specify one categorical and one numeric variable.")
+  } else if (!(cat_var %in% all_cat) || !(num_var %in% all_num)){
+    stop("Warning: Invalid categorical or numeric variable specified")
+  }
+  # this code was given
+  ggplot(tibble,
+    aes(x = get(cat_var), y = get(num_var), weight = PWGTP)) + geom_boxplot()
+}
+```
+
+Now we will **test** our function for plots works! Again we will use test tibble from testing our API query.
+
+```{r}
+plot_Census(Census_tibble, "GASP", "SEX")
+```
+
 
